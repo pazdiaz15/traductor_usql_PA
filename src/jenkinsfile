@@ -1,0 +1,40 @@
+pipeline {
+    agent any
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+        stage('Install Dependencies') {
+            steps {
+                // Instala las dependencias listadas en requirements.txt
+                sh 'pip install -r requirements.txt'
+            }
+        }
+        stage('Generate Documentation') {
+            steps {
+                // Crea la carpeta docs para almacenar la documentación generada
+                sh 'mkdir -p docs'
+                // Genera la documentación de main.py y la guarda en docs
+                sh 'pydoc -w src/main'
+                // Mueve el archivo HTML generado a la carpeta docs
+                sh 'mv src/main.html docs/'
+            }
+        }
+        stage('Archive Documentation') {
+            steps {
+                // Archiva los archivos de documentación generados para su consulta en Jenkins
+                archiveArtifacts artifacts: 'docs/*.html', allowEmptyArchive: true
+            }
+        }
+    }
+    post {
+        success {
+            echo 'Documentación generada y archivada con éxito.'
+        }
+        failure {
+            echo 'Error al generar o archivar la documentación.'
+        }
+    }
+}
